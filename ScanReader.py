@@ -1,24 +1,13 @@
-import fitz
-import pytesseract
-from PIL import Image, ImageOps
+from doctr.io import DocumentFile
+from doctr.models import ocr_predictor
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+model = ocr_predictor(pretrained=True)
 
-pdf = fitz.open("EOBs/MCEOBExample.pdf")
+doc = DocumentFile.from_pdf("EOBs/MCEOBExample.pdf")
 
-for page_num in range(len(pdf)):
-    page = pdf.load_page(page_num)
+result = model(doc)
 
-    # Render page as an image
-    pix = page.get_pixmap(dpi=600)
-
-    image = pix.pil_image()
-
-    image = ImageOps.grayscale(image)
-    image = ImageOps.autocontrast(image)
-
-    # OCR the image
-    text = pytesseract.image_to_string(image)
-
-    print(f"----- Page {page_num + 1} -----")
-    print(text)
+for page in result.pages:
+    for block in page.blocks:
+        for line in block.lines:
+            print(" ".join(word.value for word in line.words))
