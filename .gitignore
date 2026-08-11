@@ -16,6 +16,7 @@ Thumbs.db
 # Build files
 dist/
 build/
+*.spec
 
 # Environment variables
 .env

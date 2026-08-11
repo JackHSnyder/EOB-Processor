@@ -31,17 +31,17 @@ def separateMiddleInitial(string):
         return string.strip(), ""
 
 
-def printDocument(document):
-    for page in document.pages:
+def printDocument(pdf):
+    for page in pdf.pages:
         for block in page.blocks:
             for line in block.lines:
                 print(" ".join(word.value for word in line.words))
 
 
-def getWordsFromPDF(result):
+def getWordsFromPDF(pdf):
     wordArray = []
     
-    for page in result.pages:
+    for page in pdf.pages:
         for block in page.blocks:
             for line in block.lines:
                 for word in line.words:
@@ -51,11 +51,14 @@ def getWordsFromPDF(result):
 
 
 def setupPDFReader(filePath):
-    model = ocr_predictor(pretrained=True)
+    model = ocr_predictor(
+        det_arch="db_resnet50",
+        reco_arch="crnn_vgg16_bn",
+        pretrained=True)
     doc = DocumentFile.from_pdf(filePath)
-    result = model(doc)
+    pdf = model(doc)
 
-    return result
+    return pdf
 
 
 def getExceptions(exceptionsPath):
