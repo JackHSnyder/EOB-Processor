@@ -3,15 +3,10 @@ from doctr.models import ocr_predictor
 
 import shutil
 
-from enum import Enum
 from Patient import Patient
 
-
-class parseState(Enum):
-    SEARCHING = 0
-    LAST_NAME = 1
-    FIRST_NAME = 2
-    DOS = 3
+# Debug variable
+from main import printPatients
 
 
 def splitAtChar(string, char):
@@ -59,6 +54,20 @@ def setupPDFReader(filePath):
     pdf = model(doc)
 
     return pdf
+
+
+def recordService(patients, patient):
+    if patient in patients:
+        patients[patients.index(patient)].newDOS(patient.startDOS)
+        # Debug
+        if printPatients:
+            print(patients[patients.index(patient)])
+
+    else:
+        patients.append(patient)
+        # Debug
+        if printPatients:
+            print(patient)
 
 
 def getExceptions(exceptionsPath):

@@ -45,10 +45,13 @@ class Patient:
         elif date > self.endDOS:
             self.endDOS = date
 
-    def setMedicare():
-        Patient.medicare = "MC"
+    def setMedicare(isMedicare : bool):
+        if isMedicare:
+            Patient.medicare = "MC"
+        else:
+            Patient.medicare = ""
 
-    def setException(self,):
+    def setException(self):
         self.isException = True
 
 

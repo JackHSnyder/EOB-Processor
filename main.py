@@ -1,13 +1,11 @@
 from pathlib import Path
 import sys
-import string
 
 import helper
-from helper import parseState
-
-from Patient import Patient
-
-from Date import Date
+from enums import FileType
+import Medicare
+import BlueCross
+import Patient
 
 # Debug Variables - All should be false for packaging
 printDoc = False
@@ -39,22 +37,6 @@ def setup(filePath):
     return helper.getWordsFromPDF(helper.setupPDFReader(filePath))
 
 
-def recordService(patients, patient):
-    if patient in patients:
-        patients[patients.index(patient)].newDOS(patient.startDOS)
-
-        # Debug
-        if printPatients:
-            print(patients[patients.index(patient)])
-
-    else:
-        patients.append(patient)
-
-        # Debug
-        if printPatients:
-            print(patient)
-
-
 def checkExceptions(patients, exceptionsPath):
     exceptions = helper.getExceptions(exceptionsPath)
 
@@ -71,78 +53,12 @@ def makeDuplicates(patients, filePath):
         helper.makeDuplicateFile(original, duplicate)
 
 
-def extractPatients(wordArray):
-    patients = []
-    tempPatient = Patient()
-    lastFirstName = ""
-    potentialDate = ""
-    state = parseState.SEARCHING
-
+def findFileType(wordArray):
     for word in wordArray:
-        match state:
-            case parseState.SEARCHING:
-                if word == "NAME":
-                    state = parseState.LAST_NAME
-
-                elif word == "MEDICARE":
-                    Patient.setMedicare()
-
-                continue
-
-            case parseState.LAST_NAME:
-                if word.find(",") == -1:
-                    tempPatient.addToLastName(word)
-
-                else:
-                    ln, fn = helper.splitAtChar(word, ",")  # "fn" is blank if the names were correctly spaced
-                    tempPatient.addToLastName(ln)
-                    tempPatient.addToFirstName(fn)
-
-                    state = parseState.FIRST_NAME
-
-                continue
-
-            case parseState.FIRST_NAME:
-                word = word.translate(str.maketrans("", "", string.punctuation))  # Removes any punctuation from the current word - OCR sometimes registers below line as extra "." or "_"
-
-                if not lastFirstName:
-                    lastFirstName = word
-
-                elif word == "MID":
-                    if len(lastFirstName) == 1:
-                        tempPatient.setMiddleInitial(lastFirstName)
-                    else:
-                        tempPatient.addToFirstName(lastFirstName)
-
-                    state = parseState.DOS
-
-                else:
-                    tempPatient.addToFirstName(lastFirstName)
-                    lastFirstName = word
-
-                continue
-
-            case parseState.DOS:
-                # Dates are always MMDD followed by MMDDYY in the following word
-                if potentialDate != "":
-                    if word[:4] == potentialDate and len(word) == 6 and word.isdigit():
-                        potentialDate = ""
-                        tempPatient.newDOS(Date(int(word[:2]), int(word[2:4]), int(word[4:])))
-
-                        state = parseState.SEARCHING
-                        recordService(patients, tempPatient)
-                        tempPatient = Patient()
-                        lastFirstName = ""
-
-                    else:
-                        potentialDate = ""
-
-                if len(word) == 4 and word.isdigit():
-                    potentialDate = word
-
-                continue
-
-    return patients
+        if word == "MEDICARE":
+            return FileType.MEDICARE
+        elif word == "BLUECROSS":
+            return FileType.BLUECROSS
 
 
 if __name__ == "__main__":
@@ -160,7 +76,14 @@ if __name__ == "__main__":
 
     wordArray = setup(filePath)
 
-    patients = extractPatients(wordArray)
+    match findFileType(wordArray):
+        case FileType.MEDICARE:
+            Patient.setMedicare(True)
+            patients = Medicare.extractPatients(wordArray)
+
+        case FileType.BLUECROSS:
+            Patient.setMedicare(False)
+            patients = BlueCross.extractPatients(wordArray)
 
     if exceptionsPath:
         checkExceptions(patients, exceptionsPath)
