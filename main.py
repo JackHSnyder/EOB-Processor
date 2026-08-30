@@ -8,8 +8,8 @@ from BlueCross import BlueCross
 from Patient import Patient
 
 # Debug Variables - All should be false for packaging
-printDoc = True
-printPatients = True  # Exceptions not accounted for in print
+printDoc = False
+printPatients = False  # Exceptions not accounted for in print
 
 createDuplicates = True
 

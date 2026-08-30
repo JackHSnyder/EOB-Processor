@@ -1,4 +1,5 @@
 import string
+import re
 
 import helper
 from enums import ParseState
@@ -30,13 +31,14 @@ class BlueCross:
                                 state = ParseState.SEARCHING
                                 continue
 
-                        if word.find(",") == -1:
-                            tempPatient.addToLastName(word)
+                        parts = re.split(r'[,.]', word, maxsplit=1)  # Split the word at the first comma or period
+
+                        if len(parts) == 1:
+                            tempPatient.addToLastName(parts[0])
         
                         else:
-                            ln, fn = helper.splitAtChar(word, ",")  # "fn" is blank if the names were correctly spaced
-                            tempPatient.addToLastName(ln)
-                            tempPatient.addToFirstName(fn)
+                            tempPatient.addToLastName(parts[0])
+                            tempPatient.addToFirstName(parts[1])
         
                             state = ParseState.FIRST_NAME
         
