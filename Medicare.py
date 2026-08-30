@@ -2,8 +2,8 @@ import string
 
 import helper
 from enums import ParseState
-import Patient
-import Date
+from Patient import Patient
+from Date import Date
 
 
 class Medicare:

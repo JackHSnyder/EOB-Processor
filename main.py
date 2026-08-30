@@ -3,13 +3,13 @@ import sys
 
 import helper
 from enums import FileType
-import Medicare
-import BlueCross
-import Patient
+from Medicare import Medicare
+from BlueCross import BlueCross
+from Patient import Patient
 
 # Debug Variables - All should be false for packaging
-printDoc = False
-printPatients = False  # Exceptions not accounted for in print
+printDoc = True
+printPatients = True  # Exceptions not accounted for in print
 
 createDuplicates = True
 
@@ -57,8 +57,10 @@ def findFileType(wordArray):
     for word in wordArray:
         if word == "MEDICARE":
             return FileType.MEDICARE
-        elif word == "BLUECROSS":
+        elif word == "BlueCross":
             return FileType.BLUECROSS
+
+    return FileType.MEDICARE
 
 
 if __name__ == "__main__":

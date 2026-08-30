@@ -45,6 +45,7 @@ class Patient:
         elif date > self.endDOS:
             self.endDOS = date
 
+    @staticmethod
     def setMedicare(isMedicare : bool):
         if isMedicare:
             Patient.medicare = "MC"

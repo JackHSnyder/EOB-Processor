@@ -20,3 +20,6 @@ build/
 
 # Environment variables
 .env
+
+# Top Secret EOB Files
+top-secret/
