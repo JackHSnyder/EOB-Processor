@@ -25,7 +25,7 @@ class Medicare:
 
             # Loop for each part of the name (unless it's unreasonably long)
             while count < 6:
-                nameParts = re.split(r'[_-]', namePart)  # Removes instances of "_" from the current string - OCR sometimes registers the below line as an extra "." or "_"
+                nameParts = [part for part in re.split(r'[_-]', namePart) if part]  # Removes instances of "_" from the current string - OCR sometimes registers the below line as an extra "." or "_"
                 if len(nameParts) > 1:
                     for i in range(1, len(nameParts)):
                         wordArray.insert(nameIndex + i, nameParts[i])
@@ -44,9 +44,13 @@ class Medicare:
                 nameIndex += 1
                 namePart = wordArray[nameIndex]
 
-            if count > 5:
-                nameArray = []
+            del wordArray[:nameIndex]
 
+            if count > 5:
+                continue
+
+
+            lastNameArray = []
             firstNameArray = []
             isFirstName = False
 
@@ -54,11 +58,11 @@ class Medicare:
             # Loop through each part of the discovered name to find first-last
             while i < len(nameArray):
                 name = nameArray[i]
-                nameParts = re.split(r'[,.]', name)  # Removes instances of "," or "." from the current string - OCR sometimes registers the below line as extra punctuation or mistakes "," for "."
+                nameParts = [part for part in re.split(r'[,.]', name) if part]  # Removes instances of "," or "." from the current string - OCR sometimes registers the below line as extra punctuation or mistakes "," for "."
                 print(nameParts)
                 if len(nameParts) != 0:
                     if not isFirstName:
-                        tempPatient.addToLastName(nameParts[0])
+                        lastNameArray.append(nameParts[0])
 
                         if len(nameParts) > 1 or len(name) != len(nameParts[0]):
                             isFirstName = True
@@ -69,21 +73,29 @@ class Medicare:
                     for j in range(1, len(nameParts[1:])):
                         nameArray.insert(i + j, nameParts[j])
 
+                i += 1
+
+            if len(firstNameArray) == 0:
+                firstNameArray = lastNameArray[1:]
+                del lastNameArray[1:]
+
             if len(firstNameArray[-1]) == 1:
-                tempPatient.setMiddleInitial = firstNameArray[-1]
+                tempPatient.setMiddleInitial(firstNameArray[-1])
                 firstNameArray.pop()
 
+            for name in lastNameArray:
+                tempPatient.addToLastName(name)
             for name in firstNameArray:
                 tempPatient.addToFirstName(name)
 
-            del wordArray[:nameIndex]
 
             dateIndex = next((i for i, value in enumerate(wordArray) if value == "11"), -1)
             nextNameIndex = next((i for i, value in enumerate(wordArray) if value == "NAME"), -1)
             dateFound = False
-            while dateIndex != -1 and dateIndex < nextNameIndex:
+
+            while dateIndex != -1 and (dateIndex < nextNameIndex or nextNameIndex == -1):
                 date = wordArray[dateIndex - 1]
-                if date.isDigit() and len(date) == 6:
+                if date.isdigit() and len(date) == 6:
                     tempPatient.newDOS(Date(int(date[:2]), int(date[2:4]), int(date[4:])))
                     dateFound = True
                     break
@@ -96,6 +108,7 @@ class Medicare:
                 helper.recordService(patients, tempPatient)
 
             tempPatient = Patient()
+            startIndex = next((i for i, value in enumerate(wordArray) if value == "NAME"), -1)
 
 
 
