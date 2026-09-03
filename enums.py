@@ -2,9 +2,8 @@ from enum import Enum
 
 class ParseState(Enum):
     SEARCHING = 0
-    LAST_NAME = 1
-    FIRST_NAME = 2
-    DOS = 3
+    NAME = 1
+    DOS = 2
 
 
 class FileType(Enum):

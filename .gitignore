@@ -17,6 +17,7 @@ Thumbs.db
 dist/
 build/
 *.spec
+*.exe
 
 # Environment variables
 .env

@@ -8,8 +8,8 @@ from BlueCross import BlueCross
 from Patient import Patient
 
 # Debug Variables - All should be false for packaging
-printDoc = False
-printPatients = False  # Exceptions not accounted for in print
+printDoc = True
+printPatients = True  # Exceptions not accounted for in print
 
 createDuplicates = True
 
@@ -62,8 +62,7 @@ def findFileType(wordArray):
 
     return FileType.MEDICARE
 
-
-if __name__ == "__main__":
+def main():
     if len(sys.argv) < 2:
         incorrectInputError()
 
@@ -93,4 +92,12 @@ if __name__ == "__main__":
     if createDuplicates:
         makeDuplicates(patients, filePath)
 
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        input ("\nPress Enter to exit...")
+    
     sys.exit(0)
