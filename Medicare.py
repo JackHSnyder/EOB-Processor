@@ -11,9 +11,6 @@ class Medicare:
     def extractPatients(wordArray):
         patients = []
         tempPatient = Patient()
-        lastFirstName = ""
-        potentialDate = ""
-        state = ParseState.SEARCHING
 
         startIndex = next((i for i, value in enumerate(wordArray) if value == "NAME"), -1)
         # Loop for each potential patient
@@ -61,6 +58,13 @@ class Medicare:
                 nameParts = [part for part in re.split(r'[,.]', name) if part]  # Removes instances of "," or "." from the current string - OCR sometimes registers the below line as extra punctuation or mistakes "," for "."
                 print(nameParts)
                 if len(nameParts) != 0:
+                    if helper.isNameSuffix(nameParts[0]):
+                        for name in firstNameArray:
+                            lastNameArray.append(name)
+                        firstNameArray = []
+
+                        isFirstName = True
+
                     if not isFirstName:
                         lastNameArray.append(nameParts[0])
 
@@ -110,72 +114,4 @@ class Medicare:
             tempPatient = Patient()
             startIndex = next((i for i, value in enumerate(wordArray) if value == "NAME"), -1)
 
-
-
-            
-
-        # for word in wordArray:
-        #     match state:
-        #         case ParseState.SEARCHING:
-        #             if word == "NAME":
-        #                 state = ParseState.LAST_NAME
-    
-        #             continue
-
-        #         case ParseState.Name:
-    
-        #         case ParseState.LAST_NAME:
-        #             parts = re.split(r'[,.]', word, maxsplit=1)  # Split the word at the first comma or period
-
-        #             if len(parts) == 1:
-        #                 tempPatient.addToLastName(parts[0])
-    
-        #             else:
-        #                 tempPatient.addToLastName(parts[0])
-        #                 tempPatient.addToFirstName(parts[1])
-    
-        #                 state = ParseState.FIRST_NAME
-    
-        #             continue
-    
-        #         case ParseState.FIRST_NAME:
-        #             word = word.translate(str.maketrans("", "", string.punctuation))  # Removes any punctuation from the current word - OCR sometimes registers below line as extra "." or "_"
-    
-        #             if not lastFirstName:
-        #                 lastFirstName = word
-    
-        #             elif word == "MID":
-        #                 if len(lastFirstName) == 1:
-        #                     tempPatient.setMiddleInitial(lastFirstName)
-        #                 else:
-        #                     tempPatient.addToFirstName(lastFirstName)
-    
-        #                 state = ParseState.DOS
-    
-        #             else:
-        #                 tempPatient.addToFirstName(lastFirstName)
-        #                 lastFirstName = word
-    
-        #             continue
-    
-        #         case ParseState.DOS:
-        #             # Dates are always MMDD followed by MMDDYY in the following word
-        #             if potentialDate != "":
-        #                 if word[:4] == potentialDate and len(word) == 6 and word.isdigit():
-        #                     potentialDate = ""
-        #                     tempPatient.newDOS(Date(int(word[:2]), int(word[2:4]), int(word[4:])))
-    
-        #                     state = ParseState.SEARCHING
-        #                     helper.recordService(patients, tempPatient)
-        #                     tempPatient = Patient()
-        #                     lastFirstName = ""
-    
-        #                 else:
-        #                     potentialDate = ""
-    
-        #             if len(word) == 4 and word.isdigit():
-        #                 potentialDate = word
-    
-        #             continue
-    
         return patients

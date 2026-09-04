@@ -9,6 +9,8 @@ from Patient import Patient
 from main import printPatients
 
 
+nameSuffixes = ["JR", "SR", "II", "III", "IV", "V", "VI"]
+
 def splitAtChar(string, char):
     index = string.find(char)
     if index != -1:
@@ -70,28 +72,6 @@ def recordService(patients, patient):
             print(patient)
 
 
-def getExceptions(exceptionsPath):
-    exceptions = []
-
-    tempException = Patient()
-
-    with open(exceptionsPath, "r") as file:
-        for line in file:
-            lastName, rest = splitAtChar(line, ",")
-
-            if lastName:
-                firstName, middleInitial = separateMiddleInitial(rest)
-
-                tempException.lastName = lastName
-                tempException.firstName = firstName
-                tempException.middleInitial = middleInitial
-
-                exceptions.append(tempException)
-                tempException = Patient()
-
-    return exceptions
-
-
 def makeDuplicateFile(original, duplicate):
     if not duplicate.exists():
         shutil.copy2(original, duplicate)
@@ -106,3 +86,10 @@ def makeDuplicateFile(original, duplicate):
         counter += 1
 
     shutil.copy2(original, duplicate)
+
+def isNameSuffix(word):
+    for suffix in nameSuffixes:
+        if word.upper() == suffix:
+            return True
+
+    return False

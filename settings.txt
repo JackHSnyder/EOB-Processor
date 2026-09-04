@@ -1,0 +1,14 @@
+~ Settings ~
+Auto Send to Folders: False
+Folders Directory:
+
+
+
+~ Exceptions ~
+Prefixed Names:
+McDonald
+O'Donnell
+
+
+Include Middle Initial:
+Benson, Ronaldo

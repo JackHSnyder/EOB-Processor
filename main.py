@@ -6,6 +6,7 @@ from enums import FileType
 from Medicare import Medicare
 from BlueCross import BlueCross
 from Patient import Patient
+from Settings import Settings
 
 # Debug Variables - All should be false for packaging
 printDoc = True
@@ -22,28 +23,29 @@ def incorrectInputError():
 
 def identifyFilePaths():
     filePath = ""
-    exceptionsPath = ""
+    settingsPath = ""
 
     for argument in sys.argv[1:]:
         if not filePath and argument[-3:].lower() == "pdf":
             filePath = argument
-        elif not exceptionsPath and "exceptions.txt" in argument.lower():
-            exceptionsPath = argument
+        elif not settingsPath and "settings.txt" in argument.lower():
+            settingsPath = argument
 
-    return filePath, exceptionsPath
+    return filePath, settingsPath
 
 
 def setup(filePath):
     return helper.getWordsFromPDF(helper.setupPDFReader(filePath))
 
 
-def checkExceptions(patients, exceptionsPath):
-    exceptions = helper.getExceptions(exceptionsPath)
+def checkExceptions(patients):
+    for patient in patients:
+        if patient.getFirstLastName() in Settings.initialNames:
+            patient.setException(True)
 
-    for exception in exceptions:
-        if exception in patients:
-            patients[patients.index(exception)].setException()
-
+        correctCapitalization = next((s for s in Settings.prefixNames if s.lower() == patient.getLastName().lower()), None)
+        if correctCapitalization:
+            patient.setLastName(correctCapitalization)
 
 def makeDuplicates(patients, filePath):
     original = Path(filePath)
@@ -66,14 +68,19 @@ def main():
     if len(sys.argv) < 2:
         incorrectInputError()
 
-    filePath, exceptionsPath = identifyFilePaths()
+    filePath, settingsPath = identifyFilePaths()
 
     if not filePath:
         incorrectInputError()
 
+    if settingsPath:
+        Settings.readSettings(settingsPath)
+
+
     # Debug
     if printDoc:
         helper.printDocument(helper.setupPDFReader(filePath))
+
 
     wordArray = setup(filePath)
 
@@ -86,8 +93,9 @@ def main():
             Patient.setMedicare(False)
             patients = BlueCross.extractPatients(wordArray)
 
-    if exceptionsPath:
-        checkExceptions(patients, exceptionsPath)
+
+    if settingsPath:
+        checkExceptions(patients)
 
     if createDuplicates:
         makeDuplicates(patients, filePath)

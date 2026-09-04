@@ -13,18 +13,21 @@ class Patient:
 
         self.isException = False
 
-
+    def getFirstName(self):
+        return self.firstName
     def setFirstName(self, fn):
-        self.firstName = fn.capitalize()
+        self.firstName = fn
     def addToFirstName(self, name):
         if name:
             if self.firstName:
                 self.firstName += " " + name.capitalize()
             else:
                 self.setFirstName(name)
-        
+
+    def getLastName(self):
+        return self.lastName
     def setLastName(self, ln):
-        self.lastName = ln.capitalize()
+        self.lastName = ln
     def addToLastName(self, name):
         if name:
             if self.lastName:
@@ -55,6 +58,10 @@ class Patient:
     def setException(self):
         self.isException = True
 
+
+    def getFirstLastName(self):
+      return f"{self.lastName}, {self.firstName}"
+    
 
     def __str__(self):
         middle = f" {self.middleInitial}." if self.middleInitial and self.isException else ""
