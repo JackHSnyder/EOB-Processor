@@ -12,17 +12,17 @@ class Settings:
             Settings.getOtherSettings(file)
 
     def getExceptions(file):
-        exceptionType = ExceptionType.NONE
+        exceptionType = ExceptionType.DNE
 
         for line in file:
             line = line.strip()
 
             if not line:
-                ExceptionType = ExceptionType.NONE
+                exceptionType = ExceptionType.DNE
                 continue
 
             match exceptionType:
-                case ExceptionType.NONE:
+                case ExceptionType.DNE:
                     if "PREFIXED NAMES" in line.upper():
                         exceptionType = ExceptionType.PREFIX
                         continue
@@ -32,7 +32,7 @@ class Settings:
                         continue
 
                 case ExceptionType.PREFIX:
-                    Settings.prefixNames.append(line)
+                    Settings.namePrefixes.append(line)
 
                 case ExceptionType.MIDDLE_INITIAL:
                     Settings.initialNames.append(line)

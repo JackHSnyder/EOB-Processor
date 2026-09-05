@@ -3,13 +3,13 @@ from Date import Date
 class Patient:
     medicare = ""
 
-    def __init__(self, firstName = "", lastName = "", middleInitial = "", date : Date = Date(0, 0, 0)):
+    def __init__(self, firstName = "", lastName = "", middleInitial = "", date : Date = Date.null):
         self.firstName = firstName.capitalize()
         self.lastName = lastName.capitalize()
         self.middleInitial = middleInitial.capitalize()
 
         self.startDOS = date
-        self.endDOS = Date(0, 0, 0)
+        self.endDOS = Date.null
 
         self.isException = False
 
@@ -22,7 +22,7 @@ class Patient:
             if self.firstName:
                 self.firstName += " " + name.capitalize()
             else:
-                self.setFirstName(name)
+                self.firstName = name.capitalize()
 
     def getLastName(self):
         return self.lastName
@@ -33,27 +33,24 @@ class Patient:
             if self.lastName:
                 self.lastName += " " + name.capitalize()
             else:
-                self.setLastName(name)
+                self.lastName = name.capitalize()
 
     def setMiddleInitial(self, mi):
         self.middleInitial = mi.capitalize()
 
     def newDOS(self, date : Date):
-        if self.startDOS == Date(0, 0, 0):
+        if self.startDOS == Date.null:
             self.startDOS = date
         elif date < self.startDOS:
-            if self.endDOS == Date(0, 0, 0):
+            if self.endDOS == Date.null:
                 self.endDOS = self.startDOS
             self.startDOS = date
         elif date > self.endDOS:
             self.endDOS = date
 
     @staticmethod
-    def setMedicare(isMedicare : bool):
-        if isMedicare:
-            Patient.medicare = "MC"
-        else:
-            Patient.medicare = ""
+    def setMedicare():
+        Patient.medicare = "MC"
 
     def setException(self):
         self.isException = True
@@ -66,7 +63,7 @@ class Patient:
     def __str__(self):
         middle = f" {self.middleInitial}." if self.middleInitial and self.isException else ""
         startDOS = str(self.startDOS)[:5] if self.startDOS.isSameYear(self.endDOS) else str(self.startDOS)
-        dos = f"{startDOS}-{self.endDOS}" if self.endDOS != Date(0, 0, 0) else startDOS
+        dos = f"{startDOS}-{self.endDOS}" if self.endDOS != Date.null else startDOS
 
         return f"{self.lastName}, {self.firstName}{middle} - {self.medicare}DOS {dos}"
     

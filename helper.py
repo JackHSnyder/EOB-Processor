@@ -1,3 +1,7 @@
+from difflib import SequenceMatcher
+import re
+import string
+
 from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
@@ -28,34 +32,64 @@ def separateMiddleInitial(string):
         return string.strip(), ""
 
 
-def printDocument(pdf):
-    for page in pdf.pages:
-        for block in page.blocks:
-            for line in block.lines:
-                print(" ".join(word.value for word in line.words))
+def printDocument(wordArray):
+    for word in wordArray:
+        print(word, end=" ")
 
 
-def getWordsFromPDF(pdf):
-    wordArray = []
-    
-    for page in pdf.pages:
-        for block in page.blocks:
-            for line in block.lines:
-                for word in line.words:
-                    wordArray.append(word.value)
-
-    return wordArray
-
-
-def setupPDFReader(filePath):
+def setupOCR():
     model = ocr_predictor(
         det_arch="db_resnet50",
         reco_arch="crnn_vgg16_bn",
         pretrained=True)
-    doc = DocumentFile.from_pdf(filePath)
-    pdf = model(doc)
+    return model
 
-    return pdf
+
+def findNext(wordArray, target, caseInsensitive = True, punctuationInsensitive = True, tolerance = 0):
+    if caseInsensitive:
+        target = target.upper()
+
+    for i, word in enumerate(wordArray):
+        word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive)
+
+        if word == target:
+            if separation:
+                wordArray.insert(i + 1, separation)
+
+            return i
+
+    # Only bother checking similarity if the search fails the first time and tolerance was given
+    if tolerance > 0:
+        for i, word in enumerate(wordArray):
+            word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive)
+
+            similarity = SequenceMatcher(None, word, target).ratio()
+            if similarity >= 1 - tolerance:
+                if separation:
+                    wordArray.insert(i + 1, separation)
+
+                return i
+
+    return -1  # Target not found
+
+def cleanWord(word, caseInsensitive = True, punctuationInsensitive = True):
+    separation = ""
+
+    word = word.strip()
+
+    if caseInsensitive:
+        word = word.upper()
+
+    # Split word at any punctuation at most once
+    if punctuationInsensitive:
+        words = splitAt(word, string.punctuation, 1)
+        word = words[0] if words else ""
+        separation = words[1] if len(words) > 1 else ""
+
+    return word, separation
+
+def splitAt(word, chars, maxsplits=0):
+    return [part for part in re.split(f"[{re.escape(chars)}]", word, maxsplit=maxsplits) if part]
 
 
 def recordService(patients, patient):

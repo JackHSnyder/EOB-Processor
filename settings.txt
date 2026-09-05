@@ -7,8 +7,10 @@ Folders Directory:
 ~ Exceptions ~
 Prefixed Names:
 McDonald
+McDaniel
+McGrew
 O'Donnell
 
 
+
 Include Middle Initial:
-Benson, Ronaldo

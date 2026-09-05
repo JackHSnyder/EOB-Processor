@@ -1,5 +1,8 @@
 from pathlib import Path
+import string
 import sys
+
+from doctr.io import DocumentFile
 
 import helper
 from enums import FileType
@@ -40,12 +43,14 @@ def setup(filePath):
 
 def checkExceptions(patients):
     for patient in patients:
-        if patient.getFirstLastName() in Settings.initialNames:
-            patient.setException(True)
+        # Ignores capitalization
+        if any(s.lower() == patient.getFirstLastName().lower() for s in Settings.initialNames):
+            patient.setException()
 
-        correctCapitalization = next((s for s in Settings.prefixNames if s.lower() == patient.getLastName().lower()), None)
-        if correctCapitalization:
-            patient.setLastName(correctCapitalization)
+        # Ignores capitalization and punctuation for the check, but stores the correct format if passed
+        correctForm = next((s for s in Settings.namePrefixes if s.lower() == patient.getLastName().lower() or s.lower().translate(str.maketrans('', '', string.punctuation)) == patient.getLastName().lower()), None)
+        if correctForm:
+            patient.setLastName(correctForm)
 
 def makeDuplicates(patients, filePath):
     original = Path(filePath)
@@ -54,15 +59,41 @@ def makeDuplicates(patients, filePath):
         duplicate = original.with_name(str(patient) + ".pdf")
         helper.makeDuplicateFile(original, duplicate)
 
+def getWordsFromPDF(fileType, filePath):
+    doc = DocumentFile.from_pdf(filePath)
 
-def findFileType(wordArray):
-    for word in wordArray:
-        if word == "MEDICARE":
+    if fileType == FileType.MEDICARE:
+        doc = Medicare.shapeDocument(doc)
+    elif fileType == FileType.BLUECROSS:
+        doc = BlueCross.shapeDocument(doc)
+    else:
+        raise ValueError("Not equipped to handle this file type.")
+
+    model = helper.setupOCR()
+    pdf = model(doc)
+
+    wordArray = []
+
+    for page in pdf.pages:
+        for block in page.blocks:
+            for line in block.lines:
+                for word in line.words:
+                    wordArray.append(word.value)
+                wordArray.append("\n")
+                
+    return wordArray
+
+def getFileType():
+    print("What type of EOBs were given?")
+    print("1. Medicare     2. BlueCross")
+
+    while(True):
+        type = input("Answer as one of the above numbers: ")
+
+        if type == "1":
             return FileType.MEDICARE
-        elif word == "BlueCross":
+        elif type == "2":
             return FileType.BLUECROSS
-
-    return FileType.MEDICARE
 
 def main():
     if len(sys.argv) < 2:
@@ -76,21 +107,20 @@ def main():
     if settingsPath:
         Settings.readSettings(settingsPath)
 
+    fileType = getFileType()
+
+    wordArray = getWordsFromPDF(fileType, filePath)
 
     # Debug
     if printDoc:
-        helper.printDocument(helper.setupPDFReader(filePath))
+        helper.printDocument(wordArray)
 
-
-    wordArray = setup(filePath)
-
-    match findFileType(wordArray):
+    match fileType:
         case FileType.MEDICARE:
-            Patient.setMedicare(True)
+            Patient.setMedicare()
             patients = Medicare.extractPatients(wordArray)
 
         case FileType.BLUECROSS:
-            Patient.setMedicare(False)
             patients = BlueCross.extractPatients(wordArray)
 
 
