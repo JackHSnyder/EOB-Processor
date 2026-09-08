@@ -1,53 +1,96 @@
+import string
+
 from enums import ExceptionType
+from enums import SettingType
 
-class Settings:
-    namePrefixes = []
-    initialNames = []
-    sendToFolders = False
-    foldersDirectory = ""
+namePrefixes = []
+initialNames = []
+sendToFolders = False
+foldersDirectory = ""
+createDuplicates = True
+debug = {}
 
-    def readSettings(settingsPath):
-        with open(settingsPath, "r") as file:
-            Settings.getExceptions(file)
-            Settings.getOtherSettings(file)
-
-    def getExceptions(file):
+def readSettings(settingsPath):
+    with open(settingsPath, "r") as file:
+        settingType = SettingType.DNE
         exceptionType = ExceptionType.DNE
 
         for line in file:
             line = line.strip()
 
             if not line:
-                exceptionType = ExceptionType.DNE
                 continue
 
-            match exceptionType:
-                case ExceptionType.DNE:
-                    if "PREFIXED NAMES" in line.upper():
-                        exceptionType = ExceptionType.PREFIX
-                        continue
-
-                    elif "INCLUDE MIDDLE INITIAL" in line.upper():
-                        exceptionType = ExceptionType.MIDDLE_INITIAL
-                        continue
-
-                case ExceptionType.PREFIX:
-                    Settings.namePrefixes.append(line)
-
-                case ExceptionType.MIDDLE_INITIAL:
-                    Settings.initialNames.append(line)
-
-    def getOtherSettings(file):
-        for line in file:
-            line = line.strip().upper()
-
-            if not line:
+            if line == "~ SETTINGS ~":
+                settingType = SettingType.SETTING
+                continue
+            elif line == "~ EXCEPTIONS ~":
+                settingType = SettingType.EXCEPTION
+                continue
+            elif line == "~ DEBUG ~":
+                settingType = SettingType.DEBUG
                 continue
 
-            elif "AUTO SEND TO FOLDERS" in line and "TRUE" in line:
-                Settings.sendToFolders = True
-                continue
+            match settingType:
+                case SettingType.SETTING:
+                    getSettings(line)
+                case SettingType.EXCEPTION:
+                    exceptionType = getExceptions(line, exceptionType)
+                case SettingType.DEBUG:
+                    getDebugSettings(line)
 
-            elif "FOLDERS DIRECTORY" in line:
-                Settings.foldersDirectory = line.split(":", 1)[1].strip()
-                continue
+def getSettings(line):
+    global sendToFolders
+    global foldersDirectory
+    global createDuplicates
+
+    line = line.upper()
+
+    if "AUTO SEND TO FOLDERS" in line and "TRUE" in line:
+        sendToFolders = True
+
+    elif "FOLDERS DIRECTORY" in line:
+        foldersDirectory = line.split(":", 1)[1].strip()
+
+    elif "CREATEDUPLICATES" in line and "FALSE" in line:
+        createDuplicates = False
+
+def getExceptions(line, exceptionType):
+    lineUpper = line.upper()
+    if "PREFIXED NAMES" in lineUpper:
+        return ExceptionType.PREFIX
+    elif "INCLUDE MIDDLE INITIAL" in lineUpper:
+        return ExceptionType.MIDDLE_INITIAL
+
+    match exceptionType:
+        case ExceptionType.PREFIX:
+            namePrefixes.append(line)
+
+        case ExceptionType.MIDDLE_INITIAL:
+            initialNames.append(line)
+
+def getDebugSettings(line):
+    if not "=" in line:
+        return
+    
+    key, value = line.split("=", 1)
+
+    value = value.strip().upper()
+    if value == "TRUE":
+        value = True
+    elif value == "FALSE":
+        value = False
+
+    debug[key.strip()] = value
+
+
+def checkExceptions(patients):
+    for patient in patients:
+        # Ignores capitalization
+        if any(s.lower() == patient.getFirstLastName().lower() for s in initialNames):
+            patient.setException()
+    
+        # Ignores capitalization and punctuation for the check, but stores the correct format if passed
+        correctForm = next((s for s in namePrefixes if s.lower() == patient.getLastName().lower() or s.lower().translate(str.maketrans('', '', string.punctuation)) == patient.getLastName().lower()), None)
+        if correctForm:
+            patient.setLastName(correctForm)

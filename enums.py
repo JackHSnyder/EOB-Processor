@@ -4,6 +4,12 @@ class FileType(Enum):
     MEDICARE = 0
     BLUECROSS = 1
 
+class SettingType(Enum):
+    DNE = 0
+    SETTING = 1
+    EXCEPTION = 2
+    DEBUG = 3
+
 class ExceptionType(Enum):
     DNE = 0
     PREFIX = 1

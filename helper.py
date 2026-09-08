@@ -2,15 +2,10 @@ from difflib import SequenceMatcher
 import re
 import string
 
-from doctr.io import DocumentFile
 from doctr.models import ocr_predictor
 
 import shutil
-
-from Patient import Patient
-
-# Debug variable
-from main import printPatients
+import Settings
 
 
 nameSuffixes = ["JR", "SR", "II", "III", "IV", "V", "VI"]
@@ -96,13 +91,13 @@ def recordService(patients, patient):
     if patient in patients:
         patients[patients.index(patient)].newDOS(patient.startDOS)
         # Debug
-        if printPatients:
+        if Settings.debug.get("printPatients"):
             print(patients[patients.index(patient)])
 
     else:
         patients.append(patient)
         # Debug
-        if printPatients:
+        if Settings.debug.get("printPatients"):
             print(patient)
 
 

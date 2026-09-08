@@ -97,7 +97,7 @@ class Medicare:
                 firstNameArray = lastNameArray[1:]
                 del lastNameArray[1:]
 
-            if len(firstNameArray[-1]) == 1:
+            if len(firstNameArray) > 0 and len(firstNameArray[-1]) == 1:
                 tempPatient.setMiddleInitial(firstNameArray[-1])
                 firstNameArray.pop()
 

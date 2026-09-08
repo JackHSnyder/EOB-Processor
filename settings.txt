@@ -1,16 +1,23 @@
-~ Settings ~
+~ SETTINGS ~
 Auto Send to Folders: False
 Folders Directory:
+createDuplicates = False
 
 
 
-~ Exceptions ~
+
+~ EXCEPTIONS ~
 Prefixed Names:
 McDonald
 McDaniel
 McGrew
 O'Donnell
 
-
-
 Include Middle Initial:
+
+
+~ DEBUG ~
+printPageSkew = True
+makeDeskewedPDF = False
+printDoc = True
+printPatients = True
