@@ -1,9 +1,7 @@
 ~ SETTINGS ~
 Auto Send to Folders: False
 Folders Directory:
-createDuplicates = False
-
-
+createDuplicates = True
 
 
 ~ EXCEPTIONS ~

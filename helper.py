@@ -40,12 +40,12 @@ def setupOCR():
     return model
 
 
-def findNext(wordArray, target, caseInsensitive = True, punctuationInsensitive = True, tolerance = 0):
+def findNext(wordArray, target, caseInsensitive = True, punctuationInsensitive = True, spaceInsensitive = True, tolerance = 0):
     if caseInsensitive:
         target = target.upper()
 
     for i, word in enumerate(wordArray):
-        word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive)
+        word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive, spaceInsensitive)
 
         if word == target:
             if separation:
@@ -56,7 +56,7 @@ def findNext(wordArray, target, caseInsensitive = True, punctuationInsensitive =
     # Only bother checking similarity if the search fails the first time and tolerance was given
     if tolerance > 0:
         for i, word in enumerate(wordArray):
-            word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive)
+            word, separation = cleanWord(word, caseInsensitive, punctuationInsensitive, spaceInsensitive)
 
             similarity = SequenceMatcher(None, word, target).ratio()
             if similarity >= 1 - tolerance:
@@ -67,10 +67,11 @@ def findNext(wordArray, target, caseInsensitive = True, punctuationInsensitive =
 
     return -1  # Target not found
 
-def cleanWord(word, caseInsensitive = True, punctuationInsensitive = True):
+def cleanWord(word, caseInsensitive = True, punctuationInsensitive = True, spaceInsensitive = True):
     separation = ""
 
-    word = word.strip()
+    if spaceInsensitive:
+        word = word.strip()
 
     if caseInsensitive:
         word = word.upper()

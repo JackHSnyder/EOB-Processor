@@ -88,7 +88,7 @@ class Medicare:
                     else:
                         firstNameArray.append(nameParts[0])
 
-                    for j in range(1, len(nameParts[1:])):
+                    for j in range(1, len(nameParts)):
                         nameArray.insert(i + j, nameParts[j])
 
                 i += 1

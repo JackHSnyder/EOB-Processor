@@ -1,6 +1,4 @@
 TODO:
- - Finish BCBS rewrite
  - Write anthem comprehension
  - Implement inputting multiple files at once
  - Implement auto sorting into folders
- - Better organize
