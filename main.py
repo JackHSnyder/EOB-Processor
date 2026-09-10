@@ -17,16 +17,16 @@ def incorrectInputError():
 
 
 def identifyFilePaths():
-    filePath = ""
+    filePaths = []
     settingsPath = ""
 
     for argument in sys.argv[1:]:
-        if not filePath and argument[-3:].lower() == "pdf":
-            filePath = argument
+        if argument[-3:].lower() == "pdf":
+            filePaths.append(argument)
         elif not settingsPath and "settings.txt" in argument.lower():
             settingsPath = argument
 
-    return filePath, settingsPath
+    return filePaths, settingsPath
 
 
 def makeDuplicates(patients, filePath):
@@ -55,9 +55,9 @@ def main():
     if len(sys.argv) < 2:
         incorrectInputError()
 
-    filePath, settingsPath = identifyFilePaths()
+    filePaths, settingsPath = identifyFilePaths()
 
-    if not filePath:
+    if len(filePaths) == 0:
         incorrectInputError()
 
     if settingsPath:
@@ -65,28 +65,29 @@ def main():
 
     fileType = getFileType()
 
-    wordArray = DocumentHandler.getWordsFromPDF(fileType, filePath)
+    for filePath in filePaths:
+        wordArray = DocumentHandler.getWordsFromPDF(fileType, filePath)
 
-    # Debug
-    if Settings.debug.get("printDoc"):
-        helper.printDocument(wordArray)
+        # Debug
+        if Settings.debug.get("printDoc"):
+            helper.printDocument(wordArray)
 
-    match fileType:
-        case FileType.MEDICARE:
-            Patient.setMedicare()
-            patients = Medicare.extractPatients(wordArray)
+        match fileType:
+            case FileType.MEDICARE:
+                Patient.setMedicare()
+                patients = Medicare.extractPatients(wordArray)
 
-        case FileType.BLUECROSS:
-            patients = BlueCross.extractPatients(wordArray)
+            case FileType.BLUECROSS:
+                patients = BlueCross.extractPatients(wordArray)
 
-        case FileType.ANTHEM:
-            patients = Anthem.extractPatients(wordArray)
+            case FileType.ANTHEM:
+                patients = Anthem.extractPatients(wordArray)
 
-    if settingsPath:
-        Settings.checkExceptions(patients)
+        if settingsPath:
+            Settings.checkExceptions(patients)
 
-    if Settings.createDuplicates:
-        makeDuplicates(patients, filePath)
+        if Settings.createDuplicates:
+            makeDuplicates(patients, filePath)
 
 if __name__ == "__main__":
     try:
