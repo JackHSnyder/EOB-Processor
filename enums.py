@@ -3,6 +3,7 @@ from enum import Enum
 class FileType(Enum):
     MEDICARE = 0
     BLUECROSS = 1
+    ANTHEM = 2
 
 class SettingType(Enum):
     DNE = 0

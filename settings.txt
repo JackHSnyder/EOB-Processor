@@ -16,6 +16,6 @@ Include Middle Initial:
 
 ~ DEBUG ~
 printPageSkew = True
-makeDeskewedPDF = False
+makeAnalyzedPDF = False
 printDoc = True
 printPatients = True

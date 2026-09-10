@@ -3,34 +3,33 @@ from Patient import Patient
 from Date import Date
 
 
-class BlueCross:
+class Anthem:
     def shapeDocument(doc):
         croppedDoc = []
 
         for page in doc:
             width = page.shape[1]
-            croppedPage = page[:, :int(width * 0.275)]  # Cut off the right 72.5% of the page
+            croppedPage = page[:, :int(width * 0.82)]  # Cut off the right 50% of the page
             croppedDoc.append(croppedPage)
 
         return croppedDoc
-    
+
 
     def extractPatients(wordArray):
         patients = []
         tempPatient = Patient()
 
 
-        startIndex = helper.findNext(wordArray, "923")
+        startIndex = helper.findNext(wordArray, "PATIENT")
         # Loop for each potential patient
         while startIndex != -1:
-            # If it's a fakeout "923" remove it and try again
-            if "SPINE" in wordArray[startIndex + 2].upper() and "AND" in wordArray[startIndex + 3].upper():
+            if not "NAME" in wordArray[startIndex + 1].upper():
                 del wordArray[:startIndex + 1]
-                startIndex = helper.findNext(wordArray, "923")
+                startIndex = helper.findNext(wordArray, "PATIENT")
                 continue
 
             count = 0
-            nameIndex = startIndex + 1
+            nameIndex = startIndex + 2
             namePart = wordArray[nameIndex]
             nameArray = []
 
@@ -109,9 +108,11 @@ class BlueCross:
             for name in firstNameArray:
                 tempPatient.addToFirstName(name)
 
-            
+            networkIndex = helper.findNext(wordArray, "NETWORK")
+            del wordArray[:networkIndex]
+
             dateIndex = helper.findNext(wordArray, "\n", False, False, False)
-            nextNameIndex = helper.findNext(wordArray, "923")
+            nextNameIndex = helper.findNext(wordArray, "PATIENT")
             dateFound = False
 
             while dateIndex != -1 and (dateIndex < nextNameIndex or nextNameIndex == -1):
@@ -125,8 +126,22 @@ class BlueCross:
                         break
 
                     except ValueError as e:
-                        del wordArray[:dateIndex + 1]
-                        nextNameIndex -= dateIndex + 1
+                        potentialDate = wordArray[dateIndex + 2]
+                        date = potentialDate.replace("/", "")
+
+                        if len(potentialDate) == 10 and len(date) == 8 and date.isdigit():
+                            try:
+                                tempPatient.newDOS(Date(int(date[:2]), int(date[2:4]), int (date[6:])))
+                                dateFound = True
+                                break
+
+                            except ValueError as e:
+                                del wordArray[:dateIndex + 1]
+                                nextNameIndex -= dateIndex + 1
+
+                        else:
+                            del wordArray[:dateIndex + 1]
+                            nextNameIndex -= dateIndex + 1
                     
                 else:
                     del wordArray[:dateIndex + 1]
@@ -138,6 +153,6 @@ class BlueCross:
                 helper.recordService(patients, tempPatient)
 
             tempPatient = Patient()
-            startIndex = helper.findNext(wordArray, "923")
+            startIndex = helper.findNext(wordArray, "PATIENT")
 
         return patients

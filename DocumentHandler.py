@@ -7,23 +7,27 @@ import Settings
 import helper
 from Medicare import Medicare
 from BlueCross import BlueCross
+from Anthem import Anthem
 from enums import FileType
 
 class DocumentHandler:
     def getWordsFromPDF(fileType, filePath):
         doc = DocumentFile.from_pdf(filePath)
 
-        correctedDoc = DocumentHandler.correctDocument(doc)
+        if fileType == FileType.ANTHEM:
+            doc = DocumentHandler.rotateDocument(doc, isClockwise=False)
 
-        if Settings.debug.get("makeDeskewedPDF"):
-            DocumentHandler.makePDF(correctedDoc)
+        correctedDoc = DocumentHandler.deskewDocument(doc)
 
         if fileType == FileType.MEDICARE:
             correctedDoc = Medicare.shapeDocument(correctedDoc)
         elif fileType == FileType.BLUECROSS:
             correctedDoc = BlueCross.shapeDocument(correctedDoc)
-        else:
-            raise ValueError("Not equipped to handle this file type.")
+        elif fileType == FileType.ANTHEM:
+            correctedDoc = Anthem.shapeDocument(correctedDoc)
+
+        if Settings.debug.get("makeAnalyzedPDF"):
+            DocumentHandler.makePDF(correctedDoc)
 
         wordArray = DocumentHandler.makeWordArrayFromDoc(correctedDoc)
 
@@ -67,7 +71,7 @@ class DocumentHandler:
 
         return wordArray
 
-    def correctDocument(doc):
+    def deskewDocument(doc):
         correctedPages = []
 
         for i, page in enumerate(doc):
@@ -76,13 +80,13 @@ class DocumentHandler:
             if Settings.debug.get("printPageSkew"):
                 print(f"Page {i + 1} skew angle: {angle:.2f} degrees")
             
-            correctedPage = DocumentHandler.rotatePage(page, angle)
+            correctedPage = DocumentHandler.skewPage(page, angle)
             correctedPages.append(correctedPage)
 
         return correctedPages
     
 
-    def rotatePage(page, angle):
+    def skewPage(page, angle):
         (h, w) = page.shape[:2]
         center = (w / 2, h / 2)
 
@@ -126,6 +130,19 @@ class DocumentHandler:
 
         return np.median(angles)
 
+    def rotateDocument(doc, isClockwise):
+        rotatedDoc = []
+
+        if isClockwise:
+            rotation = cv2.ROTATE_90_CLOCKWISE
+        else:
+            rotation = cv2.ROTATE_90_COUNTERCLOCKWISE
+
+        for page in doc:
+            rotatedDoc.append(cv2.rotate(page, rotation))
+
+        return rotatedDoc
+
     def makePDF(doc):
         images = []
 
@@ -134,7 +151,7 @@ class DocumentHandler:
             images.append(Image.fromarray(pageRGB))
 
         images[0].save(
-            "deskewed.pdf",
+            "document.pdf",
             save_all = True,
             append_images = images[1:]
         )

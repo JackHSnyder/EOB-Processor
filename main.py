@@ -6,6 +6,7 @@ import Settings
 from enums import FileType
 from Medicare import Medicare
 from BlueCross import BlueCross
+from Anthem import Anthem
 from Patient import Patient
 from DocumentHandler import DocumentHandler
 
@@ -38,7 +39,7 @@ def makeDuplicates(patients, filePath):
 
 def getFileType():
     print("What type of EOBs were given?")
-    print("1. Medicare     2. BlueCross")
+    print("1. Medicare     2. BlueCross     3. Anthem")
 
     while(True):
         type = input("Answer as one of the above numbers: ")
@@ -47,6 +48,8 @@ def getFileType():
             return FileType.MEDICARE
         elif type == "2":
             return FileType.BLUECROSS
+        elif type == "3":
+            return FileType.ANTHEM
 
 def main():
     if len(sys.argv) < 2:
@@ -76,6 +79,8 @@ def main():
         case FileType.BLUECROSS:
             patients = BlueCross.extractPatients(wordArray)
 
+        case FileType.ANTHEM:
+            patients = Anthem.extractPatients(wordArray)
 
     if settingsPath:
         Settings.checkExceptions(patients)
