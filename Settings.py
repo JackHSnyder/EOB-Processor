@@ -1,7 +1,10 @@
 import string
+from pathlib import Path
 
 from enums import ExceptionType
 from enums import SettingType
+
+import helper
 
 namePrefixes = []
 initialNames = []
@@ -65,9 +68,11 @@ def getExceptions(line, exceptionType):
     match exceptionType:
         case ExceptionType.PREFIX:
             namePrefixes.append(line)
+            return ExceptionType.PREFIX
 
         case ExceptionType.MIDDLE_INITIAL:
             initialNames.append(line)
+            return ExceptionType.MIDDLE_INITIAL
 
 def getDebugSettings(line):
     if not "=" in line:
@@ -86,11 +91,28 @@ def getDebugSettings(line):
 
 def checkExceptions(patients):
     for patient in patients:
-        # Ignores capitalization
-        if any(s.lower() == patient.getFirstLastName().lower() for s in initialNames):
-            patient.setException()
+        for name in initialNames:
+            fn, ln, mi, s = helper.parseFullName(name)
+
+            if fn == patient.getFirstName().lower() and ln == patient.getLastName().lower():
+                patient.setException()
     
         # Ignores capitalization and punctuation for the check, but stores the correct format if passed
-        correctForm = next((s for s in namePrefixes if s.lower() == patient.getLastName().lower() or s.lower().translate(str.maketrans('', '', string.punctuation)) == patient.getLastName().lower()), None)
-        if correctForm:
-            patient.setLastName(correctForm)
+        cleanedPatient, pt2 = helper.cleanWord(patient.getLastName())
+        cleanedPatient = cleanedPatient + pt2
+        for name in namePrefixes:
+            cleanedName, pt2 = helper.cleanWord(name)
+            cleanedName = cleanedName + pt2
+
+            if cleanedPatient == cleanedName:
+                patient.setLastName(name)
+                break
+
+
+def getPatientFolders():
+    path = Path(foldersDirectory)
+
+    if sendToFolders and path.is_dir():
+        return [f for f in path.iterdir() if f.is_dir()]
+    else:
+        return []

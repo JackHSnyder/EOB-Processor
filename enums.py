@@ -15,3 +15,8 @@ class ExceptionType(Enum):
     DNE = 0
     PREFIX = 1
     MIDDLE_INITIAL = 2
+
+class NameExceptionType(Enum):
+    MIDDLE_INITIAL = 0
+    NO_MIDDLE_INITIAL = 1
+    SPELLING = 2

@@ -29,12 +29,37 @@ def identifyFilePaths():
     return filePaths, settingsPath
 
 
-def makeDuplicates(patients, filePath):
-    original = Path(filePath)
+def makeDuplicates(originalPath, patients):
+    originalPath = Path(originalPath)
+    filepaths = []
+    patientFolders = Settings.getPatientFolders()
 
-    for patient in patients:
-        duplicate = original.with_name(str(patient) + ".pdf")
-        helper.makeDuplicateFile(original, duplicate)
+    if Settings.sendToFolders:
+        for patient in patients:
+            directory, exceptions, similarityFound = helper.findDirectory(patientFolders, patient)
+
+            if directory:
+                filepaths.append(directory / (str(patient) + ".pdf"))
+            else:
+                print(f"\n\nNo exact folder name matches the file '{str(patient)}'")
+
+                directory = helper.handleDirectoryExceptions(exceptions, patient)
+
+                if directory:
+                    if not directory.is_dir():
+                        directory.mkdir()
+
+                    filepaths.append(directory / (str(patient) + ".pdf"))
+
+                else:
+                    filepaths.append(originalPath.with_name(str(patient) + ".pdf"))
+            
+    else:
+        for patient in patients:
+            filepaths.append(originalPath.with_name(str(patient) + ".pdf"))
+
+    for newPath in filepaths:
+        helper.makeDuplicateFile(originalPath, newPath)
 
 
 def getFileType():
@@ -87,7 +112,7 @@ def main():
             Settings.checkExceptions(patients)
 
         if Settings.createDuplicates:
-            makeDuplicates(patients, filePath)
+            makeDuplicates(filePath, patients)
 
 if __name__ == "__main__":
     try:

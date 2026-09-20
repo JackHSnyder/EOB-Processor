@@ -1,2 +1,0 @@
-TODO:
- - Implement auto sorting into folders

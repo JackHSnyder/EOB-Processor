@@ -1,6 +1,6 @@
 ~ SETTINGS ~
 Auto Send to Folders: False
-Folders Directory:
+Folders Directory: 
 createDuplicates = True
 
 
@@ -13,9 +13,8 @@ O'Donnell
 
 Include Middle Initial:
 
-
 ~ DEBUG ~
-printPageSkew = True
+printPageSkew = False
 makeAnalyzedPDF = False
-printDoc = True
+printDoc = False
 printPatients = True

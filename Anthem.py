@@ -77,7 +77,7 @@ class Anthem:
                             lastNameArray.append(name)
 
                         firstNameArray = []
-                        lastNameArray.append(nameParts[0])
+                        tempPatient.setSuffix(nameParts[0])
 
                         isFirstName = True
 
