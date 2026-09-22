@@ -17,6 +17,7 @@ class ExceptionType(Enum):
     MIDDLE_INITIAL = 2
 
 class NameExceptionType(Enum):
-    MIDDLE_INITIAL = 0
-    NO_MIDDLE_INITIAL = 1
-    SPELLING = 2
+    DUPLICATE = 0
+    MIDDLE_INITIAL = 1
+    NO_MIDDLE_INITIAL = 2
+    SPELLING = 3

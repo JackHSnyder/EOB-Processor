@@ -1,6 +1,5 @@
 from difflib import SequenceMatcher
-from typing import TypeAlias
-from pathlib import Path
+
 import re
 import string
 import shutil
@@ -8,7 +7,6 @@ import shutil
 from doctr.models import ocr_predictor
 
 import Settings
-from enums import NameExceptionType
 
 
 nameSuffixes = ["JR", "SR", "II", "III", "IV", "V", "VI"]
@@ -111,58 +109,6 @@ def recordService(patients, patient):
             print(patient)
 
 
-def findDirectory(patientFolders, patient):
-    directory = ""
-    similarityFound = False
-
-    # Creates a list of tuples which are required to have the type NameExceptionType and then str
-    exceptions: dict[NameExceptionType, list[Path]] = {
-        NameExceptionType.NO_MIDDLE_INITIAL: [],
-        NameExceptionType.MIDDLE_INITIAL: [],
-        NameExceptionType.SPELLING: []
-    }
-
-    for folder in patientFolders:
-        folderFirst, folderLast, folderMiddle, _suffix_ = parseFullName(str(folder.name))
-        if patient.getFirstName().lower() == folderFirst and patient.getLastName().lower() == folderLast:
-            if folderMiddle:
-                if patient.middleInitial:
-                    if patient.middleInitial == folderMiddle:
-                        directory = folder
-                        break
-                    else:
-                        print("exception added")
-                        exceptions[NameExceptionType.MIDDLE_INITIAL].append(folder)
-                        similarityFound = True
-
-                else:
-                    print("exception added")
-                    exceptions[NameExceptionType.NO_MIDDLE_INITIAL].append(folder)
-                    similarityFound = True
-
-            else:
-                if patient.isException and patient.middleInitial:
-                    print("exception added")
-                    exceptions[NameExceptionType.NO_MIDDLE_INITIAL].append(folder)
-                    similarityFound = True
-                else:
-                    directory = folder
-                    break
-
-        elif (patient.getFirstName().lower() == folderFirst and isSimilar(patient.getLastName().lower(), folderLast, .25)) or (isSimilar(patient.getFirstName().lower(), folderFirst, .25) and patient.getLastName().lower() == folderLast):
-            if patient.isException:
-                if patient.middleInitial == folderMiddle:
-                    print("exception added")
-                    exceptions[NameExceptionType.SPELLING].append(folder)
-                    similarityFound = True
-            else:
-                print("exception added")
-                exceptions[NameExceptionType.SPELLING].append(folder)
-                similarityFound = True
-
-    return directory, exceptions, similarityFound
-
-
 def parseFullName(name):
     firstName = ""
     lastName = ""
@@ -182,64 +128,20 @@ def parseFullName(name):
         potentialSuffix = lastName[suffixIndex + 1:].strip().lower()
         if isNameSuffix(potentialSuffix):
             suffix = potentialSuffix
-            del lastName[suffixIndex:]
+            lastName = lastName[:suffixIndex]
 
-    if name[-1] == "." and name[-3] == " " and name[-2].isalpha():
-        middleInitial = name[-2].strip().lower()
+    parts = splitAt(firstName, " ")
+    for part in parts:
+        cleanPart = part.strip().replace(".", "").replace("-", "")
+        if len(cleanPart) == 1:
+            middleInitial = cleanPart
+            firstName = firstName[:firstName.find(part) - 1]
+            break
+        elif cleanPart.isdigit():
+            firstName = firstName[:firstName.find(part) - 1]
+            break
 
     return firstName, lastName, middleInitial, suffix
-
-
-def handleDirectoryExceptions(exceptions, patient):
-    folderNum = 2
-    folderList = []
-
-    for nameExceptionType in exceptions:
-        if exceptions[nameExceptionType]:
-            match nameExceptionType:
-                case NameExceptionType.NO_MIDDLE_INITIAL:
-                    print("\nFor the following folders, either the file or folder includes a middle initial while the other does not:")
-                case NameExceptionType.MIDDLE_INITIAL:
-                    print("\nThese folders have different middle initials from the file:")
-                case NameExceptionType.SPELLING:
-                    print("\nThere are minor spelling changes between the file and the following folders:")
-
-            for folder in exceptions[nameExceptionType]:
-                print(f"{folderNum}: {folder.name}")
-                folderList.append(folder)
-                folderNum += 1
-
-    if folderNum > 2:
-        print("\nAbove are all of the found folders with a similar name to the detected patient.")
-        print("Type a number from an folder and press enter to place the file there.")
-
-    print("\nChoose 1 to create a new folder for the patient.")
-    print("Choose 0 to place the file in the same folder as the originally analyzed document.\n")
-
-    choice = -1
-    while choice < 0 or choice >= folderNum:
-        if folderNum > 3:
-            print(f"0, 1, or a folder from 2 - {folderNum - 1}:", end=" ")
-        elif folderNum == 3:
-            print(f"0, 1, or 2:", end=" ")
-        else:
-            print("0 or 1:", end=" ")
-
-        while True:
-            try:
-                choice = int(input())
-                break
-            except ValueError:
-                print("Only enter numbers.")
-
-
-    if choice >= 2:
-        choice -= 2
-        return folderList[choice]
-    elif choice == 1:
-        return Path(Settings.foldersDirectory) / (patient.getName() + ".pdf")
-    else:
-        return ""
     
 
 def makeDuplicateFile(original, duplicatePath):

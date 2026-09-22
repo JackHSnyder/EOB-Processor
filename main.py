@@ -9,6 +9,7 @@ from BlueCross import BlueCross
 from Anthem import Anthem
 from Patient import Patient
 from DocumentHandler import DocumentHandler
+from FolderHandler import FolderHandler
 
 def incorrectInputError():
     print("Please drag an EOB in PDF format onto this application.")
@@ -36,14 +37,14 @@ def makeDuplicates(originalPath, patients):
 
     if Settings.sendToFolders:
         for patient in patients:
-            directory, exceptions, similarityFound = helper.findDirectory(patientFolders, patient)
+            directory, exceptions = FolderHandler.findDirectory(patientFolders, patient)
 
             if directory:
                 filepaths.append(directory / (str(patient) + ".pdf"))
             else:
-                print(f"\n\nNo exact folder name matches the file '{str(patient)}'")
+                print(f"\n\nNo single folder name exactly matches the patient '{patient.getName()}'")
 
-                directory = helper.handleDirectoryExceptions(exceptions, patient)
+                directory = FolderHandler.handleDirectoryExceptions(exceptions, patient)
 
                 if directory:
                     if not directory.is_dir():

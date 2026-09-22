@@ -1,6 +1,6 @@
 ~ SETTINGS ~
-Auto Send to Folders: False
-Folders Directory: 
+Auto Send to Folders: True
+Folders Directory: D:\Patients
 createDuplicates = True
 
 
@@ -12,6 +12,7 @@ McGrew
 O'Donnell
 
 Include Middle Initial:
+Chapman, Judy
 
 ~ DEBUG ~
 printPageSkew = False
